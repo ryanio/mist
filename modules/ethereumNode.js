@@ -1,14 +1,12 @@
-const _ = require('./utils/underscore.js');
-const fs = require('fs');
-const Q = require('bluebird');
-const spawn = require('child_process').spawn;
-const { dialog } = require('electron');
-const Windows = require('./windows.js');
-const logRotate = require('log-rotate');
-const path = require('path');
-const EventEmitter = require('events').EventEmitter;
-const Sockets = require('./socketManager');
-const ClientBinaryManager = require('./clientBinaryManager');
+import _ from './utils/underscore.js';
+import fs from 'fs';
+import Q from 'bluebird';
+import { dialog } from 'electron';
+import Windows from './windows.js';
+import logRotate from 'log-rotate';
+import path from 'path';
+import Sockets from './socketManager';
+import ClientBinaryManager from './clientBinaryManager';
 import Settings from './settings';
 import {
   syncLocalNode,
@@ -18,6 +16,9 @@ import {
 
 import logger from './utils/logger';
 const ethereumNodeLog = logger.create('EthereumNode');
+
+const EventEmitter = require('events').EventEmitter;
+const spawn = require('child_process').spawn;
 
 const DEFAULT_NODE_TYPE = 'geth';
 const DEFAULT_NETWORK = 'main';

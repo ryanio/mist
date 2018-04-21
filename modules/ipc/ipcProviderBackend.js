@@ -12,7 +12,7 @@ const path = require('path');
 
 const log = require('../utils/logger').create('ipcProviderBackend');
 const Sockets = require('../socketManager');
-const Settings = require('../settings');
+import Settings from '../settings';
 const ethereumNode = require('../ethereumNode');
 const ethereumNodeRemote = require('../ethereumNodeRemote');
 

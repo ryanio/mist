@@ -1,17 +1,21 @@
 // Create the client-side Redux store.
 // This store's only purpose is to sync with the main store.
-const { createStore, applyMiddleware } = require('redux');
-const {
+import { createStore, applyMiddleware, combineReducers } from 'redux';
+import {
   forwardToMain,
   getInitialStateRenderer,
   replayActionRenderer
-} = require('electron-redux');
-const thunk = require('redux-thunk').default;
+} from 'electron-redux';
+import thunk from 'redux-thunk';
+import reducers from '../core/reducers';
+
 const initialState = getInitialStateRenderer();
-import rootReducer from '../core/rootReducer';
+delete initialState['_persist'];
+
+const reducer = combineReducers(reducers);
 
 const store = createStore(
-  rootReducer,
+  reducer,
   initialState,
   applyMiddleware(forwardToMain, thunk)
 );

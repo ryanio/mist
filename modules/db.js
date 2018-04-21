@@ -1,8 +1,10 @@
-const fs = require('fs');
-const Q = require('bluebird');
-const Loki = require('lokijs');
-const Settings = require('./settings');
-const log = require('./utils/logger').create('Db');
+import fs from 'fs';
+import Q from 'bluebird';
+import Loki from 'lokijs';
+import Settings from './settings';
+import logger from './utils/logger';
+
+const log = logger.create('db');
 
 let db;
 

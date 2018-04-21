@@ -1,20 +1,19 @@
-const {
+import {
   app,
   BrowserWindow,
-  ipcMain: ipc,
+  ipcMain as ipc,
   Menu,
   shell,
   dialog
-} = require('electron');
-const fs = require('fs');
-const path = require('path');
-const Windows = require('./windows');
-const Settings = require('./settings');
-const log = require('./utils/logger').create('menuItems');
-const swarmLog = require('./utils/logger').create('swarm');
-const updateChecker = require('./updateChecker');
-const ethereumNode = require('./ethereumNode.js');
-const ClientBinaryManager = require('./clientBinaryManager');
+} from 'electron';
+import fs from 'fs';
+import path from 'path';
+import Windows from './windows';
+import Settings from './settings';
+import updateChecker from './updateChecker';
+import ethereumNode from './ethereumNode';
+import logger from './utils/logger';
+import ClientBinaryManager from './clientBinaryManager';
 
 import {
   setLanguage,
@@ -24,6 +23,9 @@ import {
 import { changeNetwork, changeSyncMode } from './core/nodes/actions';
 import { SwarmState } from './core/settings/reducer';
 import swarmNode from './swarmNode.js';
+
+const log = logger.create('menuItems');
+const swarmLog = logger.create('swarm');
 
 // Make easier to return values for specific systems
 const switchForSystem = function(options) {

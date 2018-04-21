@@ -4934,6 +4934,12 @@ node-gyp@^3.6.0:
     tar "^2.0.0"
     which "1"
 
+node-localstorage@^1.3.0, node-localstorage@^1.3.1:
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/node-localstorage/-/node-localstorage-1.3.1.tgz#3177ef42837f398aee5dd75e319b281e40704243"
+  dependencies:
+    write-file-atomic "^1.1.4"
+
 node-pre-gyp@^0.6.39:
   version "0.6.39"
   resolved "https://registry.yarnpkg.com/node-pre-gyp/-/node-pre-gyp-0.6.39.tgz#c00e96860b23c0e1420ac7befc5044e1d78d8649"
@@ -5883,6 +5889,16 @@ redux-mock-store@^1.3.0:
   dependencies:
     lodash.isplainobject "^4.0.6"
 
+redux-persist-node-storage@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/redux-persist-node-storage/-/redux-persist-node-storage-2.0.0.tgz#4001e32b8b43c73807ef2da9ba301f4b1c66af79"
+  dependencies:
+    node-localstorage "^1.3.0"
+
+redux-persist@^5.9.1:
+  version "5.9.1"
+  resolved "https://registry.yarnpkg.com/redux-persist/-/redux-persist-5.9.1.tgz#83bd4abd526ef768f63fceee338fa9d8ed6552d6"
+
 redux-thunk@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/redux-thunk/-/redux-thunk-2.2.0.tgz#e615a16e16b47a19a515766133d1e3e99b7852e5"
@@ -6521,6 +6537,10 @@ slice-ansi@1.0.0:
   resolved "https://registry.yarnpkg.com/slice-stream/-/slice-stream-1.0.0.tgz#5b33bd66f013b1a7f86460b03d463dec39ad3ea0"
   dependencies:
     readable-stream "~1.0.31"
+
+slide@^1.1.5:
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/slide/-/slide-1.1.6.tgz#56eb027d65b4d2dce6cb2e2d32c4d4afc9e1d707"
 
 smart-buffer@^1.0.13, smart-buffer@^1.0.4:
   version "1.1.15"
@@ -7761,6 +7781,14 @@ wrap-ansi@^2.0.0:
 wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
+
+write-file-atomic@^1.1.4:
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/write-file-atomic/-/write-file-atomic-1.3.4.tgz#f807a4f0b1d9e913ae7a48112e6cc3af1991b45f"
+  dependencies:
+    graceful-fs "^4.1.11"
+    imurmurhash "^0.1.4"
+    slide "^1.1.5"
 
 write-file-atomic@^2.0.0:
   version "2.3.0"

@@ -1,20 +1,18 @@
 global._ = require('./modules/utils/underscore');
 
-const { app, dialog, ipcMain, shell, protocol } = require('electron');
-const Q = require('bluebird');
-const windowStateKeeper = require('electron-window-state');
-const timesync = require('os-timesync');
+import { app, dialog, ipcMain, shell, protocol } from 'electron';
+import Q from 'bluebird';
+import windowStateKeeper from 'electron-window-state';
+import timesync from 'os-timesync';
 
-const dbSync = require('./modules/dbSync.js');
-const i18n = require('./modules/i18n.js');
-const Sockets = require('./modules/socketManager');
-const Windows = require('./modules/windows');
-const ClientBinaryManager = require('./modules/clientBinaryManager');
-const UpdateChecker = require('./modules/updateChecker');
-const log = require('./modules/utils/logger').create('main');
-const Settings = require('./modules/settings');
-
-import configureReduxStore from './modules/core/store';
+import dbSync from './modules/dbSync';
+import i18n from './modules/i18n';
+import Sockets from './modules/socketManager';
+import Windows from './modules/windows';
+import ClientBinaryManager from './modules/clientBinaryManager';
+import UpdateChecker from './modules/updateChecker';
+import logger from './modules/utils/logger';
+import Settings from './modules/settings';
 
 import { quitApp } from './modules/core/ui/actions';
 import {
@@ -22,18 +20,17 @@ import {
   toggleSwarm
 } from './modules/core/settings/actions';
 import { syncNodeDefaults, setActiveNode } from './modules/core/nodes/actions';
+import { checkTransactionsOnNodeConnect } from './modules/core/transactions/actions';
 import { SwarmState } from './modules/core/settings/reducer';
 
 import swarmNode from './modules/swarmNode.js';
 import ethereumNodeRemote from './modules/ethereumNodeRemote';
 
+const log = logger.create('main');
+
 Q.config({
   cancellation: true
 });
-
-global.store = configureReduxStore();
-
-Settings.init();
 
 store.subscribe(() => {
   store.dispatch(setActiveNode());
@@ -181,6 +178,8 @@ function onReady() {
   ethereumNode.init();
 
   ethereumNodeRemote.start();
+
+  store.dispatch(checkTransactionsOnNodeConnect());
 
   // TODO: Settings.language relies on global.config object being set
   store.dispatch(setLanguageOnMain(Settings.language));

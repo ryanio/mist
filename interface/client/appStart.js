@@ -5,6 +5,7 @@ import { getLanguage } from './actions.js';
 import About from '../components/About';
 import RequestAccount from '../components/RequestAccount';
 import NodeInfo from '../components/NodeInfo';
+import TransactionListWidget from '../components/TransactionListWidget';
 
 /**
 The init function of Mist
@@ -85,12 +86,21 @@ function renderReactComponentPopup(locationHash) {
   }
 }
 
-function renderReactComponentMain() {
+function renderReactComponentNodeInfo() {
   render(
     <Provider store={store}>
       <NodeInfo />
     </Provider>,
     document.getElementById('react__node-info')
+  );
+}
+
+function renderReactComponentTransactionListWidget() {
+  render(
+    <Provider store={store}>
+      <TransactionListWidget />
+    </Provider>,
+    document.getElementById('react__transaction-list-widget')
   );
 }
 
@@ -104,7 +114,8 @@ Meteor.startup(function() {
     // Main window
     EthAccounts.init();
     mistInit();
-    renderReactComponentMain();
+    renderReactComponentNodeInfo();
+    renderReactComponentTransactionListWidget();
   } else {
     // render React popup window
     renderReactComponentPopup(location.hash);

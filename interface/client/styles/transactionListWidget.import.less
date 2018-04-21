@@ -1,0 +1,55 @@
+#react__transaction-list-widget {
+}
+
+.transaction-list {
+  font-size: 10px;
+  white-space: nowrap; 
+  overflow: hidden;
+  padding: 3px;
+  margin: 5px;
+  border: 1px solid #ddd;
+  position: absolute;
+  bottom: 65px;
+
+  &:hover {
+    cursor: default;
+  }
+
+  .title {
+    font-size: 11px;
+    margin-bottom: 3px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid #ddd;
+  }
+
+}
+
+.transaction {
+  margin-bottom: 4px;
+
+  &:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .status {
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    display: inline-block;
+    margin-right: 4px;
+
+    &.status-confirmed {
+      background-color: green;
+    }
+    &.status-pending {
+      background-color: yellow;
+    }
+  }
+  .hash {
+    display: inline-block;
+    max-width: 40px;
+    white-space: nowrap; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

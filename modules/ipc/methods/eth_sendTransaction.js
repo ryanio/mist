@@ -1,8 +1,9 @@
-const BaseProcessor = require('./base');
-const Windows = require('../../windows');
-const Q = require('bluebird');
-const { ipcMain: ipc } = require('electron');
-const BlurOverlay = require('../../blurOverlay');
+import BaseProcessor from './base';
+import Windows from '../../windows';
+import Q from 'bluebird';
+import { ipcMain as ipc } from 'electron';
+import BlurOverlay from '../../blurOverlay';
+import { addTransaction } from '../../core/transactions/actions';
 
 /**
  * Process method: eth_sendTransaction
@@ -76,6 +77,7 @@ module.exports = class extends BaseProcessor {
               reject(err || this.ERRORS.TX_DENIED);
             } else {
               this._log.info('Transaction sent', result);
+              store.dispatch(addTransaction({hash: result}));
               resolve(result);
             }
 

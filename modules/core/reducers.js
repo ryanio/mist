@@ -2,9 +2,13 @@ import { combineReducers } from 'redux';
 import nodes from './nodes/reducer';
 import settings from './settings/reducer';
 import ui from './ui/reducer';
+import transactions from './transactions/reducer';
 
-export default combineReducers({
+let reducers = {
   nodes,
   settings,
-  ui
-});
+  ui,
+  transactions
+};
+
+export default reducers;

@@ -1,14 +1,14 @@
-const _ = require('./utils/underscore.js');
-const Q = require('bluebird');
-const fs = require('fs');
-const { app, dialog } = require('electron');
-const got = require('got');
-const path = require('path');
-const Settings = require('./settings');
-const Windows = require('./windows');
+import _ from './utils/underscore.js';
+import Q from 'bluebird';
+import fs from 'fs';
+import { app, dialog } from 'electron';
+import got from 'got';
+import path from 'path';
+import Settings from './settings';
+import Windows from './windows';
+
 const ClientBinaryManager = require('ethereum-client-binaries').Manager;
 const EventEmitter = require('events').EventEmitter;
-
 const log = require('./utils/logger').create('ClientBinaryManager');
 
 // should be       'https://raw.githubusercontent.com/ethereum/mist/master/clientBinaries.json'

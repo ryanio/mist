@@ -1,9 +1,8 @@
-const { app } = require('electron');
-const path = require('path');
-const fs = require('fs');
-const packageJson = require('../package.json');
-const _ = require('./utils/underscore');
-const lodash = require('lodash');
+import { app } from 'electron';
+import path from 'path';
+import fs from 'fs';
+import _ from './utils/underscore';
+import lodash from 'lodash';
 
 import {
   syncBuildConfig,
@@ -11,21 +10,202 @@ import {
   setSwarmEnableOnStart
 } from './core/settings/actions';
 import logger from './utils/logger';
+import packageJson from '../package.json';
+import configureReduxStore from './core/store';
 
 const settingsLog = logger.create('Settings');
 
 let instance = null;
 
+/* =============================
+   Command line argument parsing
+================================ */
+
+// Load config
+const defaultConfig = {
+  mode: 'mist',
+  production: false
+};
+
+try {
+  _.extend(defaultConfig, require('../config.json'));
+} catch (error) {
+  settingsLog.error(error);
+}
+
+const argv = require('yargs')
+  .usage('Usage: $0 [Mist options] [Node options]')
+  .option({
+    mode: {
+      alias: 'm',
+      demand: false,
+      default: defaultConfig.mode,
+      describe: 'App UI mode: wallet, mist.',
+      requiresArg: true,
+      nargs: 1,
+      type: 'string',
+      group: 'Mist options:'
+    },
+    node: {
+      demand: false,
+      default: null,
+      describe: 'Node to use: geth, eth',
+      requiresArg: true,
+      nargs: 1,
+      type: 'string',
+      group: 'Mist options:'
+    },
+    network: {
+      demand: false,
+      default: null,
+      describe: 'Network to connect to: main, test (ropsten), rinkeby',
+      requiresArg: true,
+      nargs: 1,
+      type: 'string',
+      group: 'Mist options:'
+    },
+    rpc: {
+      demand: false,
+      describe:
+        'Path to node IPC socket file OR HTTP RPC hostport (if IPC socket file then --node-ipcpath will be set with this value).',
+      requiresArg: true,
+      nargs: 1,
+      type: 'string',
+      group: 'Mist options:'
+    },
+    swarm: {
+      describe: 'Enable Swarm on start.',
+      requiresArg: false,
+      nargs: 0,
+      type: 'boolean',
+      group: 'Mist options:'
+    },
+    swarmurl: {
+      demand: false,
+      default: 'http://localhost:8500',
+      describe:
+        'URL serving the Swarm HTTP API. If null, Mist will open a local node.',
+      requiresArg: true,
+      nargs: 1,
+      type: 'string',
+      group: 'Mist options:'
+    },
+    gethpath: {
+      demand: false,
+      describe: 'Path to Geth executable to use instead of default.',
+      requiresArg: true,
+      nargs: 1,
+      type: 'string',
+      group: 'Mist options:'
+    },
+    ethpath: {
+      demand: false,
+      describe: 'Path to Eth executable to use instead of default.',
+      requiresArg: true,
+      nargs: 1,
+      type: 'string',
+      group: 'Mist options:'
+    },
+    'ignore-gpu-blacklist': {
+      demand: false,
+      describe: 'Ignores GPU blacklist (needed for some Linux installations).',
+      requiresArg: false,
+      nargs: 0,
+      type: 'boolean',
+      group: 'Mist options:'
+    },
+    'reset-tabs': {
+      demand: false,
+      describe: 'Reset Mist tabs to their default settings.',
+      requiresArg: false,
+      nargs: 0,
+      type: 'boolean',
+      group: 'Mist options:'
+    },
+    loglevel: {
+      demand: false,
+      default: 'info',
+      describe:
+        'Minimum logging threshold: info, debug, error, trace (shows all logs, including possible passwords over IPC!).',
+      requiresArg: true,
+      nargs: 1,
+      type: 'string',
+      group: 'Mist options:'
+    },
+    syncmode: {
+      demand: false,
+      requiresArg: true,
+      describe: 'Geth synchronization mode: [fast|light|full|nosync]',
+      nargs: 1,
+      type: 'string',
+      group: 'Mist options:'
+    },
+    version: {
+      alias: 'v',
+      demand: false,
+      requiresArg: false,
+      nargs: 0,
+      describe: 'Display Mist version.',
+      group: 'Mist options:',
+      type: 'boolean'
+    },
+    skiptimesynccheck: {
+      demand: false,
+      requiresArg: false,
+      nargs: 0,
+      describe:
+        'Disable checks for the presence of automatic time sync on your OS.',
+      group: 'Mist options:',
+      type: 'boolean'
+    },
+    '': {
+      describe:
+        'To pass options to the underlying node (e.g. Geth) use the --node- prefix, e.g. --node-datadir',
+      group: 'Node options:'
+    }
+  })
+  .help('h')
+  .alias('h', 'help')
+  .parse(process.argv.slice(1));
+
+argv.nodeOptions = [];
+
+for (const optIdx in argv) {
+  if (optIdx.indexOf('node-') === 0) {
+    argv.nodeOptions.push(`--${optIdx.substr(5)}`);
+
+    if (argv[optIdx] !== true) {
+      argv.nodeOptions.push(argv[optIdx]);
+    }
+  }
+}
+
+// some options are shared
+if (argv.ipcpath) {
+  argv.nodeOptions.push('--ipcpath', argv.ipcpath);
+}
+
+if (argv.nodeOptions && argv.nodeOptions.syncmode) {
+  argv.push('--syncmode', argv.nodeOptions.syncmode);
+}
+
+/* ==========================
+   Settings
+============================= */
+
 class Settings {
   constructor() {
     if (!instance) {
       instance = this;
+      instance.init();
     }
 
     return instance;
   }
 
   init() {
+    global.store = configureReduxStore();
+
     const logLevel = { logLevel: argv.loglevel };
     const logFolder = { logFolder: path.join(this.userDataPath, 'logs') };
     const loggerOptions = Object.assign(argv, logLevel, logFolder);
@@ -182,7 +362,11 @@ class Settings {
   }
 
   get network() {
-    return argv.network;
+    if (argv.network === 'test') {
+      return 'ropsten'
+    } else {
+      return argv.network
+    }
   }
 
   get syncmode() {
@@ -316,176 +500,4 @@ class Settings {
   }
 }
 
-module.exports = new Settings();
-
-/* ==========================
-Command line argument parsing
-============================= */
-
-// Load config
-const defaultConfig = {
-  mode: 'mist',
-  production: false
-};
-
-try {
-  _.extend(defaultConfig, require('../config.json'));
-} catch (error) {
-  settingsLog.error(error);
-}
-
-const argv = require('yargs')
-  .usage('Usage: $0 [Mist options] [Node options]')
-  .option({
-    mode: {
-      alias: 'm',
-      demand: false,
-      default: defaultConfig.mode,
-      describe: 'App UI mode: wallet, mist.',
-      requiresArg: true,
-      nargs: 1,
-      type: 'string',
-      group: 'Mist options:'
-    },
-    node: {
-      demand: false,
-      default: null,
-      describe: 'Node to use: geth, eth',
-      requiresArg: true,
-      nargs: 1,
-      type: 'string',
-      group: 'Mist options:'
-    },
-    network: {
-      demand: false,
-      default: null,
-      describe: 'Network to connect to: main, test',
-      requiresArg: true,
-      nargs: 1,
-      type: 'string',
-      group: 'Mist options:'
-    },
-    rpc: {
-      demand: false,
-      describe:
-        'Path to node IPC socket file OR HTTP RPC hostport (if IPC socket file then --node-ipcpath will be set with this value).',
-      requiresArg: true,
-      nargs: 1,
-      type: 'string',
-      group: 'Mist options:'
-    },
-    swarm: {
-      describe: 'Enable Swarm on start.',
-      requiresArg: false,
-      nargs: 0,
-      type: 'boolean',
-      group: 'Mist options:'
-    },
-    swarmurl: {
-      demand: false,
-      default: 'http://localhost:8500',
-      describe:
-        'URL serving the Swarm HTTP API. If null, Mist will open a local node.',
-      requiresArg: true,
-      nargs: 1,
-      type: 'string',
-      group: 'Mist options:'
-    },
-    gethpath: {
-      demand: false,
-      describe: 'Path to Geth executable to use instead of default.',
-      requiresArg: true,
-      nargs: 1,
-      type: 'string',
-      group: 'Mist options:'
-    },
-    ethpath: {
-      demand: false,
-      describe: 'Path to Eth executable to use instead of default.',
-      requiresArg: true,
-      nargs: 1,
-      type: 'string',
-      group: 'Mist options:'
-    },
-    'ignore-gpu-blacklist': {
-      demand: false,
-      describe: 'Ignores GPU blacklist (needed for some Linux installations).',
-      requiresArg: false,
-      nargs: 0,
-      type: 'boolean',
-      group: 'Mist options:'
-    },
-    'reset-tabs': {
-      demand: false,
-      describe: 'Reset Mist tabs to their default settings.',
-      requiresArg: false,
-      nargs: 0,
-      type: 'boolean',
-      group: 'Mist options:'
-    },
-    loglevel: {
-      demand: false,
-      default: 'info',
-      describe:
-        'Minimum logging threshold: info, debug, error, trace (shows all logs, including possible passwords over IPC!).',
-      requiresArg: true,
-      nargs: 1,
-      type: 'string',
-      group: 'Mist options:'
-    },
-    syncmode: {
-      demand: false,
-      requiresArg: true,
-      describe: 'Geth synchronization mode: [fast|light|full|nosync]',
-      nargs: 1,
-      type: 'string',
-      group: 'Mist options:'
-    },
-    version: {
-      alias: 'v',
-      demand: false,
-      requiresArg: false,
-      nargs: 0,
-      describe: 'Display Mist version.',
-      group: 'Mist options:',
-      type: 'boolean'
-    },
-    skiptimesynccheck: {
-      demand: false,
-      requiresArg: false,
-      nargs: 0,
-      describe:
-        'Disable checks for the presence of automatic time sync on your OS.',
-      group: 'Mist options:',
-      type: 'boolean'
-    },
-    '': {
-      describe:
-        'To pass options to the underlying node (e.g. Geth) use the --node- prefix, e.g. --node-datadir',
-      group: 'Node options:'
-    }
-  })
-  .help('h')
-  .alias('h', 'help')
-  .parse(process.argv.slice(1));
-
-argv.nodeOptions = [];
-
-for (const optIdx in argv) {
-  if (optIdx.indexOf('node-') === 0) {
-    argv.nodeOptions.push(`--${optIdx.substr(5)}`);
-
-    if (argv[optIdx] !== true) {
-      argv.nodeOptions.push(argv[optIdx]);
-    }
-  }
-}
-
-// some options are shared
-if (argv.ipcpath) {
-  argv.nodeOptions.push('--ipcpath', argv.ipcpath);
-}
-
-if (argv.nodeOptions && argv.nodeOptions.syncmode) {
-  argv.push('--syncmode', argv.nodeOptions.syncmode);
-}
+export default new Settings();
